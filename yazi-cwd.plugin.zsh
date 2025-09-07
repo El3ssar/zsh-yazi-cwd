@@ -6,7 +6,7 @@
 : "${YAZI_BIN:=$(command -v yazi)}"
 : "${YAZI_FUNC:=y}"
 
-# Core implementation
+# Core implementation (+ zoxide-aware target resolution)
 _yazi_cwd_impl() {
   local ybin="$YAZI_BIN" tmp cwd
 
@@ -15,6 +15,20 @@ _yazi_cwd_impl() {
     print -u2 "yazi-cwd: '$ybin' not found in PATH"
     return 127
   fi
+
+  # ---------- zoxide/dir resolution of $1 (only if first arg isn't an option) ----------
+  if [ $# -gt 0 ] && [ "${1#-}" = "$1" ]; then
+    if [ -d "$1" ]; then
+      : # keep as-is
+    elif command -v zoxide >/dev/null 2>&1; then
+      local zi
+      zi="$(zoxide query -- "$1" 2>/dev/null)" || zi=""
+      if [ -n "$zi" ]; then
+        set -- "$zi" "${@:2}"
+      fi
+    fi
+  fi
+  # ------------------------------------------------------------------------------------
 
   # mktemp (Linux/macOS)
   if ! tmp="$(mktemp -t yazi-cwd.XXXXXX 2>/dev/null)"; then
