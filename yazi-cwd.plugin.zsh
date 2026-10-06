@@ -3,8 +3,10 @@
 #   YAZI_BIN=yazi
 #   YAZI_FUNC=y
 
-: "${YAZI_BIN:=$(command -v yazi)}"
-: "${YAZI_FUNC:=y}"
+# typeset -g: no warnings when loaded from inside a function (antidote)
+# under `setopt warn_create_global`.
+typeset -g YAZI_BIN="${YAZI_BIN:-$(command -v yazi)}"
+typeset -g YAZI_FUNC="${YAZI_FUNC:-y}"
 
 # Core implementation (+ zoxide-aware target resolution)
 _yazi_cwd_impl() {
